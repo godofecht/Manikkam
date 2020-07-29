@@ -1,7 +1,5 @@
 
 class Layer
-  @@neurons = []
-
   def initialize()
     @@neurons = []
   end
@@ -25,7 +23,7 @@ end
 class Neuron
   @@eta = 0
   @@alpha = 0
-  @@m_outputWeights = []
+
   @@m_gradient = 0
   @@m_outputVal = 0
   @@m_myIndex = 0
@@ -35,6 +33,7 @@ class Neuron
 
 
   def initialize(numOutputs,myIndex)
+    @@m_outputWeights = []
     for i in 0..numOutputs-1 do
       @@m_outputWeights.push(Connection.new())
       @@m_outputWeights[-1] = randomWeight()
@@ -49,15 +48,15 @@ class Neuron
       sum += prevLayer[n].getOutputVal() * prevLayer[n].m_outputWeights[m_myIndex].weight
     end
 
-    m_outputVal = transferFunction(sum)
+    @@m_outputVal = transferFunction(sum)
   end
 
   def getOutputVal()
-    return m_outputVal
+    return @@m_outputVal
   end
 
   def setOutputVal(n)
-    m_outputVal = n
+    @@m_outputVal = n
   end
 
   def calcHiddenGradients(nextLayer)
@@ -100,6 +99,10 @@ class Neuron
 
   def transferFunction(x)
     return tanh(x)
+  end
+
+  def getWeights()
+    return @@m_outputWeights
   end
 end
 
@@ -184,8 +187,8 @@ class Network
 
   def getResults(resultVals)
     resultVals.clear
-    for n in 0..m_layers[-1].count-1 do
-      resultVals.push(m_layers.back()[n].getOutputVal())
+    for n in 0..@@m_layers[-1].getNeurons().count-1 do
+      resultVals.push(@@m_layers[-1].getNeurons()[n].getOutputVal())
     end
   end
 
@@ -193,25 +196,27 @@ class Network
     weights = []
     for i in 0..@@m_layers.count-1 do
       numNeurons = @@m_layers[i].getNeurons().count
+      puts(@@m_layers[i].getNeurons()[i].getWeights())
       for j in 0..numNeurons-1 do
-        numWeights = @@m_layers[i].getNeurons()[j].count)
+        numWeights = @@m_layers[i].getNeurons().count
         for k in 0..numWeights-1 do
-          weights.push(@@m_layers[i].getNeurons()[j].m_outputWeights[k].weight)
+          weights.push(@@m_layers[i].getNeurons()[j].getWeights().count)
         end
       end
     end
     return weights
   end
 
-  def putWeights()
+  def putWeights(weights)
     cWeight = 0
-    for i in 0..m_layers.count-1 do
-      numNeurons = m_layers[i].count
+    for i in 0..@@m_layers.count-1 do
+      numNeurons = @@m_layers[i].getNeurons().count
+      puts(@@m_layers[i].getNeurons()[i].getWeights())
       for j in 0..numNeurons-1 do
-        numWeights = m_layers[i][j].count
+        numWeights = @@m_layers[i].getNeurons().count
         for k in 0..numWeights-1 do
           cWeight = cWeight + 1
-          m_layers[i][j].m_outputWeights[k].weight = weights[cWeight]
+          @@m_layers[i].getNeurons()[j].getWeights()[k] = weights[cWeight]
         end
       end
     end
@@ -267,7 +272,7 @@ class Computer
   end
 
   def SetWeights(weights)
-    thisNetwork.putWeights(weights)
+    @@thisNetwork.putWeights(weights)
   end
 end
 
@@ -275,8 +280,10 @@ end
 topology = [4,4,4]
 newComputer = Computer.new(topology)
 testingWeights = newComputer.GetWeights()
+testArray = [1,1,0,1]
 newComputer.SetWeights(testingWeights)
-newComputer.feedForward(testArray)
+newComputer.feedforward(testArray)
+resultVals = []
 resultVals.clear
-testComputer.getNetwork().getResults(resultVals)
+newComputer.getNetwork().getResults(resultVals)
 puts(resultVals)
