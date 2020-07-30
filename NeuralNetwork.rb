@@ -1,289 +1,290 @@
 
+rand = Random.new()
+
 class Layer
-  def initialize()
-    @@neurons = []
+  def initialize(topology,layerNum)
+    neuronNum = 0
+    @neurons = []
+
+    while(neuronNum < topology[layerNum]) do
+      numOutputs = layerNum == topology.count - 1 ? 0 : topology[layerNum + 1]
+      @neurons.push(Neuron.new(numOutputs,neuronNum,rand))
+  #    puts(@@neurons[0].getConnections()[0].getWeight())
+      neuronNum = neuronNum + 1
+
+#      puts @@neurons[-1].getWeights()
+    end
   end
 
 
   def add(neuron)
-    @@neurons.push(neuron)
+    @neurons.push(neuron)
   end
 
   def getNeurons()
-    return @@neurons
+    return @neurons
   end
 end
 
 
 class Connection
-  @@weight = 0
-  @@deltaweight = 0
+  def initialize(value)
+    @weight = 0.0
+    @weight = value
+    @deltaweight = 0.0
+    @weight = rand()
+  end
+
+  def getDW()
+    return @deltaweight
+  end
+  def setDW(val)
+    @deltaweight = val
+  end
+
+  def getWeight()
+    yolo = @weight.to_f()
+    return yolo
+  end
+  def setWeight(value)
+    @weight = value
+  end
 end
 
+
 class Neuron
-  @@eta = 0
-  @@alpha = 0
+  def initialize(numOutputs,myIndex,weight_value)
+    @m_myIndex = 0
+    @eta = 0.15
+    @alpha = 0.5
+    @gradient = 0.2
+    @m_myIndex = myIndex
+    @outputVal = 0.0
+    @connections = []
 
-  @@m_gradient = 0
-  @@m_outputVal = 0
-  @@m_myIndex = 0
-
-
-
-
-
-  def initialize(numOutputs,myIndex)
-    @@m_outputWeights = []
     for i in 0..numOutputs-1 do
-      @@m_outputWeights.push(Connection.new())
-      @@m_outputWeights[-1] = randomWeight()
+      @connections.push(Connection.new(weight_value))
+      @connections[-1].setWeight(randomWeight())
     end
-    @@m_myIndex = myIndex
   end
 
   def feedForward(prevLayer)
     sum = 0.0
-
-    for n in 0..prevLayer.count-1 do
-      sum += prevLayer[n].getOutputVal() * prevLayer[n].m_outputWeights[m_myIndex].weight
+    for n in 0..prevLayer.getNeurons().count-1 do
+#      puts(prevLayer.getNeurons()[n].getOutputVal())
+      ting = prevLayer.getNeurons()[n].getConnections()[@m_myIndex]
+      this_weight = ting.getWeight()
+      sum = sum + (prevLayer.getNeurons()[n].getOutputVal() * this_weight)
     end
-
-    @@m_outputVal = transferFunction(sum)
+    setOutputVal(transferFunction(sum))
   end
 
   def getOutputVal()
-    return @@m_outputVal
+    return @outputVal
   end
-
   def setOutputVal(n)
-    @@m_outputVal = n
+    @outputVal = n
   end
 
   def calcHiddenGradients(nextLayer)
     dow = sumDOW(nextLayer)
-    m_gradient = dow * transferFunctionDerivative(m_outputVal)
+    @gradient = dow * transferFunctionDerivative(@outputVal)
   end
-
   def calcOutputGradients(targetVal)
-    delta = targetVal - m_outputVal
-    m_gradient = delta* transferFunctionDerivative(m_outputVal)
+    @delta = targetVal - @outputVal
+    @gradient = @delta* transferFunctionDerivative(@outputVal)
+  #  puts(@gradient)
   end
 
   def updateInputWeights(prevLayer)
-    for n in 0..prevLayer.count-1 do
-      neuron = prevLayer[n]
-      oldDeltaWeight = neuron.m_outputWeights[m_myIndex].deltaweight
+    oldDeltaWeight = 0.0
+    newDeltaWeight = 0.0
+    for n in 0..prevLayer.getNeurons().count-1 do
+      neuron = prevLayer.getNeurons()[n]
+      oldDeltaWeight = neuron.getConnections[@m_myIndex].getWeight()
 
-      double newDeltaWeight = eta * neuron.getOutputVal() * m_gradient + alpha * oldDeltaWeight
 
-      neuron.m_outputWeights[m_myIndex].deltaweight = newDeltaWeight
-      neuron.m_outputWeights[m_myIndex].weight += newDeltaWeight
+      newDeltaWeight = @eta * neuron.getOutputVal() * @gradient + @alpha * oldDeltaWeight
+
+
+      neuron.getConnections()[@m_myIndex].setDW(newDeltaWeight)
+      neuron.getConnections()[@m_myIndex].setWeight(neuron.getConnections()[@m_myIndex].getWeight + newDeltaWeight)
     end
   end
 
   def randomWeight()
-    rand_max = 2147483647
-    return (rand()/rand_max)
+    rand_max = 2147483647.0
+    return rand/rand_max
   end
 
-  def sumDOW()
+  def sumDOW(nextLayer)
     sum = 0.0
-    for n in 0..nextLayer.count-1 do
-      sum = sum + m_outputWeights[n].weight * nextLayer[n].m_gradient
+    for n in 0..nextLayer.getNeurons().count-1 do
+      sum = sum + m_outputWeights[n].weight * nextLayer.getNeurons()[n].m_gradient
     end
   end
 
   def transferFunctionDerivative(x)
-    return 1-x*x
+    return 1.0-x*x
   end
 
   def transferFunction(x)
-    return tanh(x)
+    return Math.tanh(x)
   end
 
-  def getWeights()
-    return @@m_outputWeights
-  end
-end
-
-class Network
-
-  @@layer = []
-
-  @@m_layers = []
-  @@m_layers.push(Layer.new())
-
-  m_recentAverageSmoothingFactor = 100.0
-  m_recentAverageError = 0
-  m_error = 0
-  m_gradient = 0
-
-  def initialize(topology)
-    numLayers = topology.count
-    layerNum = 0
-    while layerNum < numLayers do
-      @@m_layers.push(Layer.new())
-      numOutputs = layerNum == topology.count - 1 ? 0 : topology[layerNum + 1]
-
-      neuronNum = 0
-      while(neuronNum <= topology[layerNum]) do
-        @@m_layers[-1].add(Neuron.new(numOutputs,neuronNum))
-        neuronNum = neuronNum + 1
-      end
-
-     @@m_layers[-1].getNeurons()[-1].setOutputVal(1.0)
-
-
-     layerNum = layerNum + 1
-
-    end
-  end
-
-  def backPropagate(targetVals)
-    outputLayer = m_layers[-1]
-    error = 0
-
-    for n in 0..outputLayer.count-1 do
-      delta = targetVals[n] - outputLayer[n].getOutputVal()
-      error += delta * delta
-    end
-
-    error = error / outputLayer.count-1
-    error = sqrt(error)
-
-
-    m_recentAverageError = (m_recentAverageError * m_recentAverageSmoothingFactor + error) / (m_recentAverageSmoothingFactor + 1.0)
-
-
-    for n in 0..outputLayer.count-1 do
-      outputLayer[n].calcOutputGradients(targetVals[n])
-    end
-
-    while(layerNum > 0) do
-      hiddenLayer = m_layers[layerNum]
-      nextlayer = m_layers[layerNum + 1]
-
-      for n in 0..hiddenlayer.count-1 do
-        hiddenLayer[n].calcHiddenGradients(nextLayer)
-      end
-
-      layerNum = layerNum - 1
-    end
-
-  while(layerNum > 0) do
-    layer = m_layers[layerNum]
-    prevLayer = m_layers[layerNum - 1]
-
-    for n in 0..layer.count-1 do
-      layer[n].updateInputWeights[prevLayer]
-    end
-  end
-
-
-  end
-
-  def feedForward(inputVals)
-  end
-
-  def getResults(resultVals)
-    resultVals.clear
-    for n in 0..@@m_layers[-1].getNeurons().count-1 do
-      resultVals.push(@@m_layers[-1].getNeurons()[n].getOutputVal())
-    end
+  def getConnections()
+    return @connections
   end
 
   def getWeights()
     weights = []
-    for i in 0..@@m_layers.count-1 do
-      numNeurons = @@m_layers[i].getNeurons().count
-      puts(@@m_layers[i].getNeurons()[i].getWeights())
-      for j in 0..numNeurons-1 do
-        numWeights = @@m_layers[i].getNeurons().count
-        for k in 0..numWeights-1 do
-          weights.push(@@m_layers[i].getNeurons()[j].getWeights().count)
-        end
-      end
+    for i in 0..@connections.count-1 do
+      weights.push(@connections[i].getWeight())
     end
     return weights
   end
+end
 
-  def putWeights(weights)
-    cWeight = 0
-    for i in 0..@@m_layers.count-1 do
-      numNeurons = @@m_layers[i].getNeurons().count
-      puts(@@m_layers[i].getNeurons()[i].getWeights())
-      for j in 0..numNeurons-1 do
-        numWeights = @@m_layers[i].getNeurons().count
-        for k in 0..numWeights-1 do
-          cWeight = cWeight + 1
-          @@m_layers[i].getNeurons()[j].getWeights()[k] = weights[cWeight]
-        end
+class Network
+  def initialize(topology)
+    @delta = 0
+    @m_layers = []
+    @m_recentAverageSmoothingFactor = 100.0
+    @m_recentAverageError = 0.0
+    @m_error = 0.0
+
+    numLayers = topology.count
+    for layerNum in 0..numLayers-1 do
+      @m_layers.push(Layer.new(topology,layerNum))
+      @m_layers[-1].getNeurons()[-1].setOutputVal(1.0)
+    end
+  end
+
+  def backPropagate(targetVals)
+
+    outputLayer = @m_layers[-1]
+    @m_error = @m_error / outputLayer.getNeurons().count
+    @m_error = @m_error ** 0.5
+    for n in 0..outputLayer.getNeurons().count-1 do
+      @delta = targetVals[n] - outputLayer.getNeurons()[n].getOutputVal()
+      @m_error += @delta * @delta
+    end
+    @m_recentAverageError = (@m_recentAverageError * @m_recentAverageSmoothingFactor + @m_error) / (@m_recentAverageSmoothingFactor + 1.0)
+    for n in 0..outputLayer.getNeurons().count-1 do
+      outputLayer.getNeurons()[n].calcOutputGradients(targetVals[n])
+    end
+
+    layerNum = @m_layers.count-3
+    while(layerNum > 0) do
+      hiddenLayer = @m_layers[layerNum]
+      nextLayer = @m_layers[layerNum + 1]
+      for n in 0..hiddenLayer.getNeurons().count-1 do
+        hiddenLayer.getNeurons()[n].calcHiddenGradients(nextLayer)
+      end
+      layerNum = layerNum - 1
+    end
+
+    layerNum = @m_layers.count-1
+
+    while(layerNum > 0) do
+      layer = @m_layers[layerNum]
+      prevLayer = @m_layers[layerNum - 1]
+      for n in 0..layer.getNeurons().count-1 do
+        layer.getNeurons()[n].updateInputWeights(prevLayer)
+      end
+      layerNum = layerNum - 1
+    end
+  end
+
+  def feedForward(inputVals)
+    for i in 0..inputVals.count-1 do
+      @m_layers[0].getNeurons()[i].setOutputVal(inputVals[i])
+    end
+
+    for l in 1..@m_layers.count-1 do
+      prevLayer = @m_layers[l-1]
+      for n in 0..@m_layers[l].getNeurons().count-1 do
+
+        @m_layers[l].getNeurons()[n].feedForward(prevLayer)
       end
     end
-    return
+  end
+
+  def getResults(resultVals)
+    resultVals.clear
+    for n in 0..@m_layers[-1].getNeurons().count-1 do
+      resultVals.push(@m_layers[-1].getNeurons()[n].getOutputVal())
+    end
+  end
+
+  def getLayers()
+    all_layers = []
+    for i in 0..@m_layers.count-1 do
+      all_layers.push(@m_layers[i])
+    end
+    return all_layers
   end
 end
 
 class Computer
-
-  @@fitness = 0
-  @@thisNetwork = 0
-  @@topology = []
-  @@weights = []
-
-
+  @thisNetwork = 0
   def initialize(topology)
-    setNetwork(topology)
-  end
-
-  def setNetwork(top)
-    @@thisNetwork = Network.new(top)
+    @thisNetwork = Network.new(topology)
   end
 
   def BackPropagate(targetVals)
-    thisNetwork.backPropagate(targetVals)
+    @thisNetwork.backPropagate(targetVals)
   end
 
   def getNetwork()
-    return @@thisNetwork
+    return @thisNetwork
   end
 
-  def GetFitness()
-    return @@fitness
+
+  def getWeights()
+    network = getNetwork()
+    layers = network.getLayers()
+    weights = []
+    for i in 0..layers.count-1 do
+      for j in 0..layers[i].getNeurons().count-1 do
+        for k in 0..layers[i].getNeurons()[j].getWeights().count-1 do
+          weights.push(layers[i].getNeurons()[j].getWeights()[k])
+        end
+      end
+    end
   end
 
-  def GetWeights()
-    weights = @@thisNetwork.getWeights()
-    return weights
-  end
 
   def feedforward(inputs)
-    @@thisNetwork.feedForward(inputs)
+    @thisNetwork.feedForward(inputs)
   end
 
   def GetResult()
-    resultVals = 0
-    thisNetwork.getResults(resultVals)
+    resultVals = 0.0
+    @thisNetwork.getResults(resultVals)
     return resultVals
   end
 
-  def SetFitness()
-    @@fitness = n
-  end
-
   def SetWeights(weights)
-    @@thisNetwork.putWeights(weights)
+    @thisNetwork.putWeights(@weights)
   end
 end
 
 
-topology = [4,4,4]
+topology = [3,3,3]
 newComputer = Computer.new(topology)
-testingWeights = newComputer.GetWeights()
-testArray = [1,1,0,1]
-newComputer.SetWeights(testingWeights)
-newComputer.feedforward(testArray)
-resultVals = []
-resultVals.clear
-newComputer.getNetwork().getResults(resultVals)
-puts(resultVals)
+#testingWeights = newComputer.GetWeights()
+trainArray = [0.0,1.0,0.0]
+testArray = [1.0,1.0,0.0]
+#newComputer.SetWeights(testingWeights)
+#weights = newComputer.GetWeights()
+newComputer.feedforward(trainArray)
+c = newComputer.getNetwork().getLayers()[0].getNeurons()[0].getWeights()
+#puts(c)
+for i in 0..1000 do
+  newComputer.BackPropagate(testArray)
+  resultVals = []
+  resultVals.clear
+  newComputer.getNetwork().getResults(resultVals)
+  puts(resultVals)
+end
