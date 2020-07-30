@@ -74,6 +74,7 @@ class Neuron
 #      puts(prevLayer.getNeurons()[n].getOutputVal())
       ting = prevLayer.getNeurons()[n].getConnections()[@m_myIndex]
       this_weight = ting.getWeight()
+#      puts(this_weight)
       sum = sum + (prevLayer.getNeurons()[n].getOutputVal() * this_weight)
     end
     setOutputVal(transferFunction(sum))
@@ -185,7 +186,6 @@ class Network
     end
 
     layerNum = @m_layers.count-1
-
     while(layerNum > 0) do
       layer = @m_layers[layerNum]
       prevLayer = @m_layers[layerNum - 1]
@@ -204,7 +204,6 @@ class Network
     for l in 1..@m_layers.count-1 do
       prevLayer = @m_layers[l-1]
       for n in 0..@m_layers[l].getNeurons().count-1 do
-
         @m_layers[l].getNeurons()[n].feedForward(prevLayer)
       end
     end
@@ -281,7 +280,7 @@ testArray = [1.0,1.0,0.0]
 newComputer.feedforward(trainArray)
 c = newComputer.getNetwork().getLayers()[0].getNeurons()[0].getWeights()
 #puts(c)
-for i in 0..1000 do
+for i in 0..0 do
   newComputer.BackPropagate(testArray)
   resultVals = []
   resultVals.clear
