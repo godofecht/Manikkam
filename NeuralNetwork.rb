@@ -276,11 +276,13 @@ newComputer = Computer.new(topology)
 trainArray = [0.0,1.0,0.0]
 testArray = [1.0,1.0,0.0]
 #newComputer.SetWeights(testingWeights)
-#weights = newComputer.GetWeights()
-newComputer.feedforward(trainArray)
+weights = newComputer.getWeights()
+#puts(weights)
+
 c = newComputer.getNetwork().getLayers()[0].getNeurons()[0].getWeights()
 #puts(c)
-for i in 0..0 do
+for i in 0..100 do
+  newComputer.feedforward(trainArray)
   newComputer.BackPropagate(testArray)
   resultVals = []
   resultVals.clear
