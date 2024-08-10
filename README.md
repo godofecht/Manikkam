@@ -1,6 +1,3 @@
-Here's a README file in markdown format for the code:
-
-```markdown
 # Simple Neural Network in Ruby
 
 This project implements a basic feedforward neural network with backpropagation in Ruby. The network is structured to learn from provided input data and adjust its weights to minimize the error between its output and the target output.
@@ -42,7 +39,7 @@ To run this code, you need to have Ruby installed on your system. You can downlo
    ruby your_script_name.rb
    ```
 
-   Replace `your_script_name.rb` with the name of the file containing the code.
+Replace `your_script_name.rb` with the name of the file containing the code.
 
 ## Classes and Methods
 
