@@ -130,5 +130,3 @@ If you would like to contribute to this project, please fork the repository, mak
 
 This project is open-source and available under the MIT License.
 ```
-
-This README provides a comprehensive overview of the project, explains how to use the code, and highlights the key classes and methods. It also includes an example of how to create and train the neural network.
